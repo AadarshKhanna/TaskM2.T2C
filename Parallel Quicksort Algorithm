@@ -1,0 +1,78 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>  // for std::swap
+#include <chrono>
+#include <cstdlib>
+
+int partition(std::vector<int>& arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j <= high - 1; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            std::swap(arr[i], arr[j]);
+        }
+    }
+
+    std::swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+void quicksort(std::vector<int>& arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+
+        quicksort(arr, low, pi - 1);
+        quicksort(arr, pi + 1, high);
+    }
+}
+
+int main() {
+    //Data with random numbers (array of size 100)
+    std::vector<int> data(10000);
+
+    // Seeding the random number generator (use a constant seed for simplicity)
+    std::srand(0);
+
+    // Filling the array with random numbers
+    for (int i = 0; i < 100; ++i) {
+        data[i] = std::rand() % 100 + 1;  // Adjust range as needed
+    }
+
+    // Printing the original array (showing only first and last few elements)
+    std::cout << "Original Array: ";
+    for (int i = 0; i < 10; ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << " ... ";
+    for (int i = data.size() - 10; i < data.size(); ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Measureing execution time of sequential quicksort
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Applying sequential quicksort
+    quicksort(data, 0, data.size() - 1);
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto execution_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+    // Print the sorted array (showing only first and last few elements)
+    std::cout << "Sorted Array: ";
+    for (int i = 0; i < 10; ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << " ... ";
+    for (int i = data.size() - 10; i < data.size(); ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print execution time
+    std::cout << "Execution Time: " << execution_time.count() << " microseconds" << std::endl;
+
+    return 0;
+}
