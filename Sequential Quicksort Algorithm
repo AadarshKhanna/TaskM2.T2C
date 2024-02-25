@@ -1,0 +1,90 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>  // for std::swap
+#include <chrono>
+#include <cstdlib>
+#include <omp.h>
+
+int partition(std::vector<int>& arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j <= high - 1; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            std::swap(arr[i], arr[j]);
+        }
+    }
+
+    std::swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+void quicksort(std::vector<int>& arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+
+        // Parallelize the recursive calls to quicksort using OpenMP
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            quicksort(arr, low, pi - 1);
+
+            #pragma omp section
+            quicksort(arr, pi + 1, high);
+        }
+    }
+}
+
+int main() {
+    // Data with random numbers (array of size 10000)
+    std::vector<int> data(10000);
+
+    // Seeding the random number generator (use a constant seed for simplicity)
+    std::srand(0);
+
+    // Filling the array with random numbers
+    for (int i = 0; i < 10000; ++i) {
+        data[i] = std::rand() % 100 + 1;  // Range of numbers from 1 to 100
+    }
+
+    // Printing the original array (showing only first and last few elements)
+    std::cout << "Original Array: ";
+    for (int i = 0; i < 10; ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << " ... ";
+    for (int i = data.size() - 10; i < data.size(); ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Measuring execution time of parallel quicksort
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Applying parallel quicksort
+    #pragma omp parallel
+    {
+        #pragma omp single nowait
+        quicksort(data, 0, data.size() - 1);
+    }
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto execution_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+    // Printing the sorted array (showing only first and last few elements)
+    std::cout << "Sorted Array: ";
+    for (int i = 0; i < 10; ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << " ... ";
+    for (int i = data.size() - 10; i < data.size(); ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print execution time
+    std::cout << "Execution Time: " << execution_time.count() << " microseconds" << std::endl;
+
+    return 0;
+}
